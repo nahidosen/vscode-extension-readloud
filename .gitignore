@@ -1,4 +1,54 @@
-node_modules/
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage
+coverage
+*.lcov
+.nyc_output
+
+# Build artifacts
 out/
-.vscode-test/
+dist/
+build/Release
+*.tsbuildinfo
 *.vsix
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Caches
+.npm
+.eslintcache
+.stylelintcache
+.cache
+.parcel-cache
+.svelte-kit/
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# VS Code extension test artifacts
+.vscode-test/
+
+# Yarn Berry
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
