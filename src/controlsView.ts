@@ -70,6 +70,11 @@ export class ReadLoudControlsViewProvider implements vscode.WebviewViewProvider 
       background: var(--vscode-list-hoverBackground);
     }
 
+    button:focus-visible {
+      outline: 1px solid var(--vscode-focusBorder);
+      outline-offset: 1px;
+    }
+
     button:active,
     button.pressed {
       transform: translateY(1px);

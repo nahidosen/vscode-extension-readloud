@@ -8,12 +8,13 @@ Think of this extension as a small async application with this pipeline:
 
 1. User runs command (`start`, `pause`, etc.)
 2. Controller loads config and validates environment
-3. Markdown text is parsed into sentence units and word ranges
+3. Supported text (markdown/plaintext/rst/asciidoc/latex/org) is parsed into sentence units and word ranges
 4. TTS engine process speaks one sentence at a time
 5. UI decorations highlight sentence, line, and current word
 6. Repeat until finished or stopped
 
 Python analogy:
+
 - `src/extension.ts` is like your `main.py` entrypoint + CLI command registration
 - `src/playbackController.ts` is like your central service class (`PlayerService`)
 - `src/tts/*` is like strategy classes around `subprocess.Popen`
@@ -53,11 +54,12 @@ Python analogy:
 ## Text parsing and timing
 
 - `src/markdownCore.ts`
-  - Pure parser utilities (no VS Code dependency)
+  - Pure parser utilities for markdown (no VS Code dependency)
   - Removes unsupported markdown regions (frontmatter, fenced code, tables, html blocks)
   - Splits prose into sentence spans and word spans
 
 - `src/markdown.ts`
+  - Chooses extraction mode by language id (markdown-aware or plain-line mode)
   - Converts parser spans into VS Code `Range`s
   - Produces `SentenceUnit[]` with sentence range + line range + word ranges
 
@@ -113,10 +115,10 @@ Python analogy:
 When user runs `ReadLoud: Start`:
 
 1. `extension.ts` routes command to `controller.start()`
-2. `start()` validates active editor is markdown and OS is Linux
+2. `start()` validates active editor language is supported and OS is Linux
 3. Config is loaded from `config.ts`
 4. Engine is selected with `selectEngine()`
-5. Markdown is parsed into sentence units (`buildSentenceUnits()`)
+5. Text is parsed into sentence units (`buildSentenceUnits()`)
 6. State becomes `playing` and run loop begins
 7. For each sentence:
    - apply sentence + line highlight
@@ -184,7 +186,7 @@ npm test
 Then in VS Code:
 
 1. Press `F5`
-2. Open markdown file in Extension Development Host
+2. Open a supported text file in Extension Development Host
 3. Run `ReadLoud: Start`
 
 If speech does not start, verify binaries:

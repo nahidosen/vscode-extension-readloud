@@ -6,6 +6,7 @@ import { ReadLoudStatusBar } from './statusBar';
 import { estimateSentenceDurationMs, estimateWordDurations } from './timing';
 import { PlaybackState, ReadLoudConfig, SentenceUnit, TtsEngineAdapter } from './types';
 import { selectEngine } from './tts/engineSelector';
+import { isSupportedLanguageId, supportedLanguageLabel } from './languageSupport';
 
 interface ControllerDependencies {
   highlighter: HighlightManager;
@@ -50,8 +51,10 @@ export class PlaybackController implements vscode.Disposable {
 
   public async startSelection(): Promise<void> {
     const editor = vscode.window.activeTextEditor;
-    if (!editor || editor.document.languageId !== 'markdown') {
-      vscode.window.showWarningMessage('ReadLoud: Open a Markdown editor first.');
+    if (!editor || !isSupportedLanguageId(editor.document.languageId)) {
+      vscode.window.showWarningMessage(
+        `ReadLoud: Open a supported text editor first (${supportedLanguageLabel()}).`
+      );
       return;
     }
 
@@ -65,8 +68,10 @@ export class PlaybackController implements vscode.Disposable {
 
   public async startFromCursor(): Promise<void> {
     const editor = vscode.window.activeTextEditor;
-    if (!editor || editor.document.languageId !== 'markdown') {
-      vscode.window.showWarningMessage('ReadLoud: Open a Markdown editor first.');
+    if (!editor || !isSupportedLanguageId(editor.document.languageId)) {
+      vscode.window.showWarningMessage(
+        `ReadLoud: Open a supported text editor first (${supportedLanguageLabel()}).`
+      );
       return;
     }
 
@@ -81,8 +86,10 @@ export class PlaybackController implements vscode.Disposable {
 
   public async startSelectionToEnd(): Promise<void> {
     const editor = vscode.window.activeTextEditor;
-    if (!editor || editor.document.languageId !== 'markdown') {
-      vscode.window.showWarningMessage('ReadLoud: Open a Markdown editor first.');
+    if (!editor || !isSupportedLanguageId(editor.document.languageId)) {
+      vscode.window.showWarningMessage(
+        `ReadLoud: Open a supported text editor first (${supportedLanguageLabel()}).`
+      );
       return;
     }
 
@@ -102,8 +109,10 @@ export class PlaybackController implements vscode.Disposable {
 
   private async startInternal(scope?: vscode.Range): Promise<void> {
     const editor = vscode.window.activeTextEditor;
-    if (!editor || editor.document.languageId !== 'markdown') {
-      vscode.window.showWarningMessage('ReadLoud: Open a Markdown editor first.');
+    if (!editor || !isSupportedLanguageId(editor.document.languageId)) {
+      vscode.window.showWarningMessage(
+        `ReadLoud: Open a supported text editor first (${supportedLanguageLabel()}).`
+      );
       return;
     }
 
@@ -131,7 +140,7 @@ export class PlaybackController implements vscode.Disposable {
       if (scope) {
         vscode.window.showWarningMessage('ReadLoud: No readable prose found in the selected text.');
       } else {
-        vscode.window.showWarningMessage('ReadLoud: No readable prose found in this Markdown file.');
+        vscode.window.showWarningMessage('ReadLoud: No readable prose found in this file.');
       }
       return;
     }
@@ -164,8 +173,10 @@ export class PlaybackController implements vscode.Disposable {
     }
 
     const editor = vscode.window.activeTextEditor;
-    if (!editor || editor.document.languageId !== 'markdown') {
-      vscode.window.showWarningMessage('ReadLoud: Resume requires an active Markdown editor.');
+    if (!editor || !isSupportedLanguageId(editor.document.languageId)) {
+      vscode.window.showWarningMessage(
+        `ReadLoud: Resume requires an active supported text editor (${supportedLanguageLabel()}).`
+      );
       return;
     }
 
@@ -255,7 +266,7 @@ export class PlaybackController implements vscode.Disposable {
 
   private async handleJump(): Promise<void> {
     const editor = vscode.window.activeTextEditor;
-    if (!editor || editor.document.languageId !== 'markdown') {
+    if (!editor || !isSupportedLanguageId(editor.document.languageId)) {
       return;
     }
 
@@ -317,12 +328,16 @@ export class PlaybackController implements vscode.Disposable {
       const wordDurations = estimateWordDurations(unit.words, sentenceDurationMs);
 
       this.wordAbort?.abort();
-      this.wordAbort = new AbortController();
-      signal.addEventListener('abort', () => this.wordAbort?.abort(), { once: true });
+      const sentenceWordAbort = new AbortController();
+      this.wordAbort = sentenceWordAbort;
+      const abortWordAnimation = (): void => {
+        sentenceWordAbort.abort();
+      };
+      signal.addEventListener('abort', abortWordAnimation, { once: true });
 
       const wordPromise = this.highlighter.animateWords(editor, unit.words, wordDurations, {
         autoScroll: this.config.autoScroll,
-        signal: this.wordAbort.signal
+        signal: sentenceWordAbort.signal
       });
 
       try {
@@ -334,8 +349,12 @@ export class PlaybackController implements vscode.Disposable {
           signal
         });
       } finally {
-        this.wordAbort?.abort();
+        signal.removeEventListener('abort', abortWordAnimation);
+        sentenceWordAbort.abort();
         await wordPromise;
+        if (this.wordAbort === sentenceWordAbort) {
+          this.wordAbort = undefined;
+        }
         this.highlighter.clearWord(editor);
       }
 

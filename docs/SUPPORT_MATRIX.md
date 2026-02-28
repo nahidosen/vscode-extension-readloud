@@ -10,21 +10,24 @@ The extension currently enforces Linux at runtime (`process.platform === 'linux'
 
 ## File Type Support
 
-- Supported language id: `markdown`
-- Supported files: any file that VS Code classifies as Markdown.
+- Supported language ids:
+  - `markdown`
+  - `plaintext`
+  - `restructuredtext`
+  - `asciidoc`
+  - `latex`
+  - `org`
 
-Common Markdown extensions:
+Common extensions by language:
 
-- `.md`
-- `.markdown`
-- `.mdown`
-- `.mkd`
-- `.mkdn`
-- `.mdtxt`
-- `.mdtext`
-- `.rmd`
+- Markdown: `.md`, `.markdown`, `.mdown`, `.mkd`, `.mkdn`, `.mdtxt`, `.mdtext`, `.rmd`
+- Plain Text: `.txt`, `.text`, `.log`
+- reStructuredText: `.rst`
+- AsciiDoc: `.adoc`, `.asciidoc`
+- LaTeX: `.tex`
+- Org: `.org`
 
-If VS Code assigns a different language id (for example `plaintext`), the extension will not start playback for that file.
+If VS Code assigns a different language id, the extension will not start playback for that file.
 
 ## Speech Engine Support
 
@@ -217,7 +220,7 @@ npm run test:integration
 
 1. User starts playback from command palette or controls view.
 2. Extension reads settings from `readLoud.*`.
-3. Markdown prose is extracted and segmented into sentences/words.
+3. Prose text is extracted and segmented into sentences/words (markdown-aware rules for markdown, plain-line rules for other supported text types).
 4. For each sentence:
    - sentence + line highlight applied
    - word highlight animated with estimated timing

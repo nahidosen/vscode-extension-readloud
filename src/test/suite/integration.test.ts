@@ -22,7 +22,7 @@ suite('Extension integration', () => {
     }
   });
 
-  test('start command does not throw without markdown editor', async () => {
+  test('start command does not throw without active supported editor', async () => {
     await vscode.commands.executeCommand('workbench.action.closeAllEditors');
     await vscode.commands.executeCommand('readLoud.start');
     assert.ok(true);

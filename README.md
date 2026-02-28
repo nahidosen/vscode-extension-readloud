@@ -1,6 +1,6 @@
-# ReadLoud Markdown (Ubuntu-first VS Code Extension)
+# ReadLoud Text (Ubuntu-first VS Code Extension)
 
-Read aloud the currently open Markdown file in VS Code and highlight what is being spoken.
+Read aloud supported text files in VS Code and highlight what is being spoken.
 
 This extension focuses on Ubuntu/Linux first and provides three simultaneous editor highlights while playing:
 
@@ -18,6 +18,12 @@ Support matrix (OS, languages, requirements):
 
 ## What's new in this version
 
+- Added support for additional easy text file types:
+  - Plain Text (`plaintext`)
+  - reStructuredText (`restructuredtext`)
+  - AsciiDoc (`asciidoc`)
+  - LaTeX (`latex`)
+  - Org (`org`)
 - Added **ReadLoud Controls** webview (compact control strip).
 - The controls view is **draggable inside VS Code UI** (Explorer/Sidebars/Panel).
 - Added **selection-only reading** command.
@@ -39,12 +45,12 @@ Note: VS Code does not allow arbitrary floating windows for extension controls. 
 
 ## Features
 
-- Reads active Markdown editor content aloud.
-- Optional selection-only reading (`ReadLoud: Start From Selection`).
+- Reads active supported text editor content aloud.
+- Optional selection-only reading (`ReadLoud: Read Selection Only`).
 - Optional start from cursor to end.
 - Optional start from selection to end.
-- Prose-first extraction (headings, paragraphs, list text).
-- Skips frontmatter, code fences, tables, and HTML blocks.
+- Markdown-aware prose extraction for Markdown files.
+- Plain-text style extraction for other supported text languages.
 - Command palette controls:
   - start from beginning
   - start from cursor to end
@@ -53,7 +59,7 @@ Note: VS Code does not allow arbitrary floating windows for extension controls. 
   - pause / resume / stop
   - next sentence / previous sentence
 - Compact controls view buttons:
-  - Start, Selection, Back, Forward, Pause, Resume, Stop
+  - From Beginning, Cursor to End, Selection Only, Selection to End, Back, Forward, Pause, Resume, Stop
 - Selectable Ubuntu speech backend:
   - `espeak-ng`
   - `speech-dispatcher` (`spd-say`)
@@ -62,20 +68,25 @@ Note: VS Code does not allow arbitrary floating windows for extension controls. 
 
 ## Supported file types (current)
 
-The extension currently reads files that VS Code recognizes as **Markdown** (`languageId: markdown`).
+The extension currently reads files when VS Code language id is one of:
 
-Common examples:
+- `markdown`
+- `plaintext`
+- `restructuredtext`
+- `asciidoc`
+- `latex`
+- `org`
 
-- `.md`
-- `.markdown`
-- `.mdown`
-- `.mkd`
-- `.mkdn`
-- `.mdtxt`
-- `.mdtext`
-- `.rmd`
+Common file extension examples:
 
-If a file is not detected as Markdown in VS Code, ReadLoud will not start for that file.
+- Markdown: `.md`, `.markdown`, `.mdown`, `.mkd`, `.mkdn`, `.mdtxt`, `.mdtext`, `.rmd`
+- Plain Text: `.txt`, `.text`, `.log`
+- reStructuredText: `.rst`
+- AsciiDoc: `.adoc`, `.asciidoc`
+- LaTeX: `.tex`
+- Org: `.org`
+
+If VS Code assigns a different language id, ReadLoud will not start for that file.
 
 ## Ubuntu prerequisites
 
@@ -104,12 +115,12 @@ npm run compile
 
 1. Open this folder in VS Code.
 2. Press `F5` (Run Extension).
-3. In the Extension Development Host, open a `.md` file.
+3. In the Extension Development Host, open a supported file (`.md`, `.txt`, `.rst`, `.adoc`, `.tex`, `.org`, etc.).
 4. Use Command Palette or the ReadLoud Controls view.
 
 ## Commands
 
-- `ReadLoud: Start` (`readLoud.start`)
+- `ReadLoud: Start From Beginning` (`readLoud.start`)
 - `ReadLoud: Start From Cursor To End` (`readLoud.startFromCursor`)
 - `ReadLoud: Read Selection Only` (`readLoud.startSelection`)
 - `ReadLoud: Start From Selection To End` (`readLoud.startSelectionToEnd`)
@@ -155,7 +166,7 @@ Example `settings.json`:
 
 ## How playback + highlighting works
 
-1. Parse visible prose from active markdown text using one of four start scopes:
+1. Parse visible prose from active text using one of four start scopes:
    - full document from beginning
    - cursor to end
    - selection only
@@ -194,4 +205,4 @@ npm run test:integration
 - Word highlight timing is estimated (not phoneme-accurate callbacks).
 - Pausing restarts the current sentence on resume for CLI engines.
 - Highlighting is in editor only (not markdown preview).
-- Complex markdown constructs are intentionally skipped in this MVP.
+- For non-markdown types, extraction is plain text oriented (lightweight, not format-aware parsing).

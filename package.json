@@ -1,8 +1,8 @@
 {
   "name": "readloud-markdown",
-  "displayName": "ReadLoud Markdown",
-  "description": "Read aloud open Markdown files on Ubuntu with word, sentence, and line highlighting.",
-  "version": "0.0.1",
+  "displayName": "ReadLoud Text",
+  "description": "Read aloud supported text files on Ubuntu with word, sentence, and line highlighting.",
+  "version": "0.0.3",
   "publisher": "local-dev",
   "license": "MIT",
   "engines": {
@@ -22,7 +22,12 @@
     "onCommand:readLoud.nextSentence",
     "onCommand:readLoud.previousSentence",
     "onView:readLoud.controls",
-    "onLanguage:markdown"
+    "onLanguage:markdown",
+    "onLanguage:plaintext",
+    "onLanguage:restructuredtext",
+    "onLanguage:asciidoc",
+    "onLanguage:latex",
+    "onLanguage:org"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -154,7 +159,7 @@
     "lint": "eslint src --ext ts",
     "pretest": "npm run compile && npm run lint",
     "test": "npm run test:unit",
-    "test:unit": "mocha \"out/test/suite/{markdown,timing,engine}.test.js\" --ui tdd",
+    "test:unit": "mocha \"out/test/suite/{markdown,timing,engine,languageSupport}.test.js\" --ui tdd",
     "test:integration": "node ./out/test/runTest.js"
   },
   "devDependencies": {

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { SentenceUnit, WordToken } from './types';
-import { extractVisibleProseLines, extractWordSpans, sentenceSpans } from './markdownCore';
+import { ProseLine, extractVisibleProseLines, extractWordSpans, sentenceSpans } from './markdownCore';
 
 export { extractVisibleProseLines, extractWordSpans, sentenceSpans } from './markdownCore';
 
@@ -9,7 +9,7 @@ export function buildSentenceUnits(document: vscode.TextDocument, scope?: vscode
     return buildSentenceUnitsForSelection(document, scope);
   }
 
-  const proseLines = extractVisibleProseLines(document.getText());
+  const proseLines = extractProseLinesForLanguage(document.getText(), document.languageId);
   const units: SentenceUnit[] = [];
 
   for (const proseLine of proseLines) {
@@ -52,7 +52,7 @@ function buildSentenceUnitsForSelection(document: vscode.TextDocument, scope: vs
     return [];
   }
 
-  const proseLines = extractVisibleProseLines(selectedText);
+  const proseLines = extractProseLinesForLanguage(selectedText, document.languageId);
   const lineOffsets = computeLineStartOffsets(selectedText);
   const baseOffset = document.offsetAt(scope.start);
   const units: SentenceUnit[] = [];
@@ -90,6 +90,42 @@ function buildSentenceUnitsForSelection(document: vscode.TextDocument, scope: vs
   }
 
   return units;
+}
+
+function extractProseLinesForLanguage(text: string, languageId: string): ProseLine[] {
+  if (languageId === 'markdown') {
+    return extractVisibleProseLines(text);
+  }
+
+  return extractPlainProseLines(text);
+}
+
+function extractPlainProseLines(text: string): ProseLine[] {
+  const lines = text.split(/\r?\n/);
+  const results: ProseLine[] = [];
+
+  for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
+    const raw = lines[lineIndex];
+    const trimmedStart = raw.trimStart();
+    if (trimmedStart.length === 0) {
+      continue;
+    }
+
+    const startCol = raw.length - trimmedStart.length;
+    const normalized = trimmedStart.trimEnd();
+    if (normalized.length === 0) {
+      continue;
+    }
+
+    results.push({
+      line: lineIndex,
+      startCol,
+      text: normalized,
+      rawLength: raw.length
+    });
+  }
+
+  return results;
 }
 
 function computeLineStartOffsets(text: string): number[] {
