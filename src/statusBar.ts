@@ -4,6 +4,7 @@ import { PlaybackState } from './types';
 export class ReadLoudStatusBar implements vscode.Disposable {
   private readonly primary: vscode.StatusBarItem;
   private readonly stop: vscode.StatusBarItem;
+  private visible = false;
 
   constructor() {
     this.primary = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
@@ -13,10 +14,15 @@ export class ReadLoudStatusBar implements vscode.Disposable {
     this.stop.name = 'ReadLoud Stop';
 
     this.update('idle');
-    this.primary.show();
   }
 
   public update(state: PlaybackState): void {
+    if (!this.visible) {
+      this.primary.hide();
+      this.stop.hide();
+      return;
+    }
+
     switch (state) {
       case 'playing':
         this.primary.text = '$(debug-pause) ReadLoud';
@@ -52,6 +58,11 @@ export class ReadLoudStatusBar implements vscode.Disposable {
         this.stop.hide();
         break;
     }
+  }
+
+  public setVisible(visible: boolean, state: PlaybackState): void {
+    this.visible = visible;
+    this.update(state);
   }
 
   public dispose(): void {

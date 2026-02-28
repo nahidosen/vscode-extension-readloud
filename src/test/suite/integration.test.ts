@@ -7,6 +7,9 @@ suite('Extension integration', () => {
 
     const expected = [
       'readLoud.start',
+      'readLoud.startFromCursor',
+      'readLoud.startSelection',
+      'readLoud.startSelectionToEnd',
       'readLoud.pause',
       'readLoud.resume',
       'readLoud.stop',

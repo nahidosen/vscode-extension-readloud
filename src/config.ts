@@ -15,6 +15,7 @@ export function getReadLoudConfig(): ReadLoudConfig {
     rate: clamp(cfg.get<number>('rate', 50), 0, 100),
     pitch: clamp(cfg.get<number>('pitch', 50), 0, 100),
     volume: clamp(cfg.get<number>('volume', 100), 0, 100),
+    showStatusBar: cfg.get<boolean>('showStatusBar', false),
     autoScroll: cfg.get<boolean>('autoScroll', true),
     syncBaseWpm: clamp(cfg.get<number>('sync.baseWPM', 180), 80, 320),
     highlight: {

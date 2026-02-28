@@ -5,6 +5,7 @@ import { ReadLoudStatusBar } from './statusBar';
 import { EspeakAdapter } from './tts/espeakAdapter';
 import { SpeechDispatcherAdapter } from './tts/speechDispatcherAdapter';
 import { getReadLoudConfig, READLOUD_SECTION } from './config';
+import { ReadLoudControlsViewProvider } from './controlsView';
 
 export function activate(context: vscode.ExtensionContext): void {
   const config = getReadLoudConfig();
@@ -22,11 +23,18 @@ export function activate(context: vscode.ExtensionContext): void {
   };
 
   register('readLoud.start', () => controller.start());
+  register('readLoud.startFromCursor', () => controller.startFromCursor());
+  register('readLoud.startSelection', () => controller.startSelection());
+  register('readLoud.startSelectionToEnd', () => controller.startSelectionToEnd());
   register('readLoud.pause', () => controller.pause());
   register('readLoud.resume', () => controller.resume());
   register('readLoud.stop', () => controller.stop(true));
   register('readLoud.nextSentence', () => controller.nextSentence());
   register('readLoud.previousSentence', () => controller.previousSentence());
+
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider(ReadLoudControlsViewProvider.viewType, new ReadLoudControlsViewProvider())
+  );
 
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((event) => {

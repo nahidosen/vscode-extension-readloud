@@ -37,6 +37,7 @@ export class PlaybackController implements vscode.Disposable {
     this.highlighter = deps.highlighter;
     this.statusBar = deps.statusBar;
     this.adapters = deps.adapters;
+    this.statusBar.setVisible(this.config.showStatusBar, this.state);
   }
 
   public getState(): PlaybackState {
@@ -44,6 +45,62 @@ export class PlaybackController implements vscode.Disposable {
   }
 
   public async start(): Promise<void> {
+    await this.startInternal();
+  }
+
+  public async startSelection(): Promise<void> {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor || editor.document.languageId !== 'markdown') {
+      vscode.window.showWarningMessage('ReadLoud: Open a Markdown editor first.');
+      return;
+    }
+
+    if (editor.selection.isEmpty) {
+      vscode.window.showWarningMessage('ReadLoud: Select text to use selection-only reading.');
+      return;
+    }
+
+    await this.startInternal(editor.selection);
+  }
+
+  public async startFromCursor(): Promise<void> {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor || editor.document.languageId !== 'markdown') {
+      vscode.window.showWarningMessage('ReadLoud: Open a Markdown editor first.');
+      return;
+    }
+
+    const scope = this.createRangeToDocumentEnd(editor.document, editor.selection.active);
+    if (scope.isEmpty) {
+      vscode.window.showWarningMessage('ReadLoud: Cursor is already at the end of the document.');
+      return;
+    }
+
+    await this.startInternal(scope);
+  }
+
+  public async startSelectionToEnd(): Promise<void> {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor || editor.document.languageId !== 'markdown') {
+      vscode.window.showWarningMessage('ReadLoud: Open a Markdown editor first.');
+      return;
+    }
+
+    if (editor.selection.isEmpty) {
+      vscode.window.showWarningMessage('ReadLoud: Select text to use selection-to-end reading.');
+      return;
+    }
+
+    const scope = this.createRangeToDocumentEnd(editor.document, editor.selection.start);
+    if (scope.isEmpty) {
+      vscode.window.showWarningMessage('ReadLoud: Selection start is already at the end of the document.');
+      return;
+    }
+
+    await this.startInternal(scope);
+  }
+
+  private async startInternal(scope?: vscode.Range): Promise<void> {
     const editor = vscode.window.activeTextEditor;
     if (!editor || editor.document.languageId !== 'markdown') {
       vscode.window.showWarningMessage('ReadLoud: Open a Markdown editor first.');
@@ -69,9 +126,13 @@ export class PlaybackController implements vscode.Disposable {
       vscode.window.showWarningMessage(`ReadLoud: ${selection.reason}`);
     }
 
-    this.sentenceUnits = buildSentenceUnits(editor.document);
+    this.sentenceUnits = buildSentenceUnits(editor.document, scope);
     if (this.sentenceUnits.length === 0) {
-      vscode.window.showWarningMessage('ReadLoud: No readable prose found in this Markdown file.');
+      if (scope) {
+        vscode.window.showWarningMessage('ReadLoud: No readable prose found in the selected text.');
+      } else {
+        vscode.window.showWarningMessage('ReadLoud: No readable prose found in this Markdown file.');
+      }
       return;
     }
 
@@ -189,6 +250,7 @@ export class PlaybackController implements vscode.Disposable {
   public reloadConfig(): void {
     this.config = getReadLoudConfig();
     this.highlighter.updateColors(this.config.highlight);
+    this.statusBar.setVisible(this.config.showStatusBar, this.state);
   }
 
   private async handleJump(): Promise<void> {
@@ -322,5 +384,10 @@ export class PlaybackController implements vscode.Disposable {
 
   public dispose(): void {
     void this.stop();
+  }
+
+  private createRangeToDocumentEnd(document: vscode.TextDocument, start: vscode.Position): vscode.Range {
+    const lastLine = document.lineAt(document.lineCount - 1);
+    return new vscode.Range(start, lastLine.range.end);
   }
 }

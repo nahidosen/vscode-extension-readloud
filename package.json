@@ -13,11 +13,15 @@
   ],
   "activationEvents": [
     "onCommand:readLoud.start",
+    "onCommand:readLoud.startFromCursor",
+    "onCommand:readLoud.startSelection",
+    "onCommand:readLoud.startSelectionToEnd",
     "onCommand:readLoud.pause",
     "onCommand:readLoud.resume",
     "onCommand:readLoud.stop",
     "onCommand:readLoud.nextSentence",
     "onCommand:readLoud.previousSentence",
+    "onView:readLoud.controls",
     "onLanguage:markdown"
   ],
   "main": "./out/extension.js",
@@ -25,7 +29,19 @@
     "commands": [
       {
         "command": "readLoud.start",
-        "title": "ReadLoud: Start"
+        "title": "ReadLoud: Start From Beginning"
+      },
+      {
+        "command": "readLoud.startFromCursor",
+        "title": "ReadLoud: Start From Cursor To End"
+      },
+      {
+        "command": "readLoud.startSelection",
+        "title": "ReadLoud: Read Selection Only"
+      },
+      {
+        "command": "readLoud.startSelectionToEnd",
+        "title": "ReadLoud: Start From Selection To End"
       },
       {
         "command": "readLoud.pause",
@@ -48,6 +64,15 @@
         "title": "ReadLoud: Previous Sentence"
       }
     ],
+    "views": {
+      "explorer": [
+        {
+          "id": "readLoud.controls",
+          "name": "ReadLoud Controls",
+          "type": "webview"
+        }
+      ]
+    },
     "configuration": {
       "title": "ReadLoud",
       "properties": {
@@ -86,6 +111,11 @@
           "minimum": 0,
           "maximum": 100,
           "description": "Speech volume, normalized from 0 to 100."
+        },
+        "readLoud.showStatusBar": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show classic status bar controls at the bottom bar. Off by default because the movable controls view is preferred."
         },
         "readLoud.highlight.wordColor": {
           "type": "string",

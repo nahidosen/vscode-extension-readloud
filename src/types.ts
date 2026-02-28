@@ -17,6 +17,7 @@ export interface ReadLoudConfig {
   rate: number;
   pitch: number;
   volume: number;
+  showStatusBar: boolean;
   autoScroll: boolean;
   syncBaseWpm: number;
   highlight: HighlightColors;
