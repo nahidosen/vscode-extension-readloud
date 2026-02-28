@@ -1,0 +1,142 @@
+{
+  "name": "readloud-markdown",
+  "displayName": "ReadLoud Markdown",
+  "description": "Read aloud open Markdown files on Ubuntu with word, sentence, and line highlighting.",
+  "version": "0.0.1",
+  "publisher": "local-dev",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.109.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:readLoud.start",
+    "onCommand:readLoud.pause",
+    "onCommand:readLoud.resume",
+    "onCommand:readLoud.stop",
+    "onCommand:readLoud.nextSentence",
+    "onCommand:readLoud.previousSentence",
+    "onLanguage:markdown"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "readLoud.start",
+        "title": "ReadLoud: Start"
+      },
+      {
+        "command": "readLoud.pause",
+        "title": "ReadLoud: Pause"
+      },
+      {
+        "command": "readLoud.resume",
+        "title": "ReadLoud: Resume"
+      },
+      {
+        "command": "readLoud.stop",
+        "title": "ReadLoud: Stop"
+      },
+      {
+        "command": "readLoud.nextSentence",
+        "title": "ReadLoud: Next Sentence"
+      },
+      {
+        "command": "readLoud.previousSentence",
+        "title": "ReadLoud: Previous Sentence"
+      }
+    ],
+    "configuration": {
+      "title": "ReadLoud",
+      "properties": {
+        "readLoud.engine": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "espeak",
+            "speechDispatcher"
+          ],
+          "default": "auto",
+          "description": "Speech backend to use on Ubuntu. auto chooses the first available backend."
+        },
+        "readLoud.voice": {
+          "type": "string",
+          "default": "",
+          "description": "Voice identifier for the active backend. Empty means backend default voice."
+        },
+        "readLoud.rate": {
+          "type": "number",
+          "default": 50,
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Speech rate, normalized from 0 to 100."
+        },
+        "readLoud.pitch": {
+          "type": "number",
+          "default": 50,
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Speech pitch, normalized from 0 to 100."
+        },
+        "readLoud.volume": {
+          "type": "number",
+          "default": 100,
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Speech volume, normalized from 0 to 100."
+        },
+        "readLoud.highlight.wordColor": {
+          "type": "string",
+          "default": "rgba(255, 170, 0, 0.45)",
+          "description": "Decoration background color for the current spoken word."
+        },
+        "readLoud.highlight.sentenceColor": {
+          "type": "string",
+          "default": "rgba(0, 170, 255, 0.20)",
+          "description": "Decoration background color for the current sentence."
+        },
+        "readLoud.highlight.lineColor": {
+          "type": "string",
+          "default": "rgba(0, 255, 140, 0.12)",
+          "description": "Decoration background color for the current line."
+        },
+        "readLoud.autoScroll": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically reveal the current spoken word/sentence in the active editor."
+        },
+        "readLoud.sync.baseWPM": {
+          "type": "number",
+          "default": 180,
+          "minimum": 80,
+          "maximum": 320,
+          "description": "Base words-per-minute used for estimated word highlight timing."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "pretest": "npm run compile && npm run lint",
+    "test": "npm run test:unit",
+    "test:unit": "mocha \"out/test/suite/{markdown,timing,engine}.test.js\" --ui tdd",
+    "test:integration": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "20.x",
+    "@types/vscode": "^1.109.0",
+    "@typescript-eslint/eslint-plugin": "^8.29.0",
+    "@typescript-eslint/parser": "^8.29.0",
+    "@vscode/test-electron": "^2.4.1",
+    "eslint": "^8.57.0",
+    "glob": "^10.4.5",
+    "mocha": "^10.8.2",
+    "typescript": "^5.8.2"
+  }
+}
