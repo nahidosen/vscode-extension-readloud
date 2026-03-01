@@ -22,4 +22,21 @@ suite('Timing estimator', () => {
     assert.equal(durations.length, words.length);
     assert.ok(durations.every((value) => value >= 60));
   });
+
+  test('enforces per-word minimum duration when target sentence duration is too low', () => {
+    const words = [
+      { text: 'a', range: {} as never },
+      { text: 'b', range: {} as never },
+      { text: 'c', range: {} as never },
+      { text: 'd', range: {} as never },
+      { text: 'e', range: {} as never },
+      { text: 'f', range: {} as never }
+    ];
+
+    const durations = estimateWordDurations(words, 100);
+    const total = durations.reduce((acc, value) => acc + value, 0);
+
+    assert.equal(total, 360);
+    assert.ok(durations.every((value) => value >= 60));
+  });
 });

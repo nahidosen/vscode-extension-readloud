@@ -41,11 +41,19 @@ Python analogy:
     - selection only
     - selection to end
   - Also handles pause/resume/stop/next/previous
+  - Also handles engine/voice control commands:
+    - pick/set engine
+    - pick/clear voice
+    - set preferred voice language
+    - set speech-dispatcher voice type
   - Stops playback if editor changes or file changes
 
 - `src/config.ts`
   - Reads `readLoud.*` settings from VS Code
-  - Clamps numeric ranges (rate/pitch/volume/WPM)
+  - Clamps numeric ranges (speedMultiplier/rate/pitch/volume/WPM)
+
+- `src/constants.ts`
+  - Single source of truth for command ids, setting keys, defaults, limits, and UI constants
 
 - `src/types.ts`
   - Shared TypeScript interfaces and types
@@ -84,7 +92,7 @@ Python analogy:
   - Fallback behavior when configured engine unavailable
 
 - `src/tts/processUtils.ts`
-  - `command -v` check
+  - binary existence check via process spawn
   - `spawn()` helper
   - safe `SIGTERM` kill helper
 
@@ -101,7 +109,8 @@ Python analogy:
   - Status bar controls and icons based on playback state
 
 - `src/controlsView.ts`
-  - Compact webview buttons for Start/Selection/Back/Forward/Pause/Resume/Stop
+  - Compact webview controls grouped as Start Modes/Playback/Speed+Volume/Engine/Voice
+  - Includes speed and volume sliders directly after playback controls
   - View can be dragged between VS Code containers (Explorer/Sidebars/Panel)
 
 ## Tests

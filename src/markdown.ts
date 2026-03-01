@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { MARKDOWN_LANGUAGE_ID } from './constants';
 import { SentenceUnit, WordToken } from './types';
 import { ProseLine, extractVisibleProseLines, extractWordSpans, sentenceSpans } from './markdownCore';
 
@@ -93,7 +94,7 @@ function buildSentenceUnitsForSelection(document: vscode.TextDocument, scope: vs
 }
 
 function extractProseLinesForLanguage(text: string, languageId: string): ProseLine[] {
-  if (languageId === 'markdown') {
+  if (languageId === MARKDOWN_LANGUAGE_ID) {
     return extractVisibleProseLines(text);
   }
 

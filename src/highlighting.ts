@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { HIGHLIGHTING } from './constants';
 import { HighlightColors, WordToken } from './types';
 
 interface WordAnimationOptions {
@@ -116,7 +117,7 @@ export class HighlightManager implements vscode.Disposable {
       }
 
       this.showWord(editor, words[index].range, options.autoScroll);
-      const duration = durationsMs[index] ?? durationsMs[durationsMs.length - 1] ?? 120;
+      const duration = durationsMs[index] ?? durationsMs[durationsMs.length - 1] ?? HIGHLIGHTING.DEFAULT_WORD_DURATION_MS;
       await delay(duration, options.signal);
     }
   }

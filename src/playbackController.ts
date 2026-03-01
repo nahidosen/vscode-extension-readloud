@@ -1,10 +1,29 @@
 import * as vscode from 'vscode';
 import { getReadLoudConfig } from './config';
+import {
+  ENGINE_VALUES,
+  ENGINE_DISPLAY_NAMES,
+  PLAYBACK_TIMINGS_MS,
+  READLOUD_DEFAULTS,
+  READLOUD_LIMITS,
+  READLOUD_SECTION,
+  READLOUD_SETTINGS,
+  SPEECH_DISPATCHER_VOICE_TYPES,
+  SUPPORTED_PLATFORM,
+  SUPPORTED_PLATFORM_LABEL
+} from './constants';
 import { HighlightManager } from './highlighting';
 import { buildSentenceUnits } from './markdown';
 import { ReadLoudStatusBar } from './statusBar';
 import { estimateSentenceDurationMs, estimateWordDurations } from './timing';
-import { PlaybackState, ReadLoudConfig, SentenceUnit, TtsEngineAdapter } from './types';
+import {
+  EngineSetting,
+  PlaybackState,
+  ReadLoudConfig,
+  SentenceUnit,
+  SpeechDispatcherVoiceType,
+  TtsEngineAdapter
+} from './types';
 import { selectEngine } from './tts/engineSelector';
 import { isSupportedLanguageId, supportedLanguageLabel } from './languageSupport';
 
@@ -33,12 +52,139 @@ export class PlaybackController implements vscode.Disposable {
   private runToken = 0;
 
   private wordAbort: AbortController | undefined;
+  private liveConfigRestartTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor(deps: ControllerDependencies) {
     this.highlighter = deps.highlighter;
     this.statusBar = deps.statusBar;
     this.adapters = deps.adapters;
     this.statusBar.setVisible(this.config.showStatusBar, this.state);
+  }
+
+  public async pickEngine(): Promise<void> {
+    const items: Array<vscode.QuickPickItem & { value: EngineSetting }> = [
+      { label: ENGINE_DISPLAY_NAMES.auto, detail: 'Use first available engine', value: ENGINE_VALUES.AUTO },
+      { label: ENGINE_DISPLAY_NAMES.espeak, detail: 'Classic local CLI engine', value: ENGINE_VALUES.ESPEAK },
+      {
+        label: ENGINE_DISPLAY_NAMES.speechDispatcher,
+        detail: 'System speech-dispatcher backend',
+        value: ENGINE_VALUES.SPEECH_DISPATCHER
+      }
+    ];
+
+    const choice = await vscode.window.showQuickPick(items, {
+      placeHolder: `Current engine: ${this.config.engine}`
+    });
+
+    if (!choice) {
+      return;
+    }
+
+    await this.updateSetting(READLOUD_SETTINGS.ENGINE, choice.value);
+    vscode.window.showInformationMessage(`ReadLoud: Engine set to ${choice.label}.`);
+  }
+
+  public async setEngineAuto(): Promise<void> {
+    await this.updateSetting(READLOUD_SETTINGS.ENGINE, ENGINE_VALUES.AUTO);
+    vscode.window.showInformationMessage(`ReadLoud: Engine set to ${ENGINE_DISPLAY_NAMES.auto}.`);
+  }
+
+  public async setEngineEspeak(): Promise<void> {
+    await this.updateSetting(READLOUD_SETTINGS.ENGINE, ENGINE_VALUES.ESPEAK);
+    vscode.window.showInformationMessage(`ReadLoud: Engine set to ${ENGINE_DISPLAY_NAMES.espeak}.`);
+  }
+
+  public async setEngineSpeechDispatcher(): Promise<void> {
+    await this.updateSetting(READLOUD_SETTINGS.ENGINE, ENGINE_VALUES.SPEECH_DISPATCHER);
+    vscode.window.showInformationMessage(`ReadLoud: Engine set to ${ENGINE_DISPLAY_NAMES.speechDispatcher}.`);
+  }
+
+  public async pickVoice(): Promise<void> {
+    this.reloadConfig();
+    const selection = await selectEngine(this.config.engine, this.adapters);
+    const adapter = selection.adapter;
+
+    if (!adapter) {
+      vscode.window.showWarningMessage(`ReadLoud: ${selection.reason}`);
+      return;
+    }
+
+    const voices = await adapter.listVoices();
+    if (voices.length === 0) {
+      await this.setVoiceManually(adapter.displayName);
+      return;
+    }
+
+    const items = voices.map((voice) => ({
+      label: voice.label,
+      detail: voice.detail,
+      value: voice.id
+    }));
+    items.unshift({
+      label: '$(edit) Enter Voice Manually',
+      detail: 'Type a voice id manually',
+      value: '__manual__'
+    });
+
+    const choice = await vscode.window.showQuickPick(items, {
+      placeHolder: `Select voice for ${adapter.displayName}`
+    });
+
+    if (!choice) {
+      return;
+    }
+
+    if (choice.value === '__manual__') {
+      await this.setVoiceManually(adapter.displayName);
+      return;
+    }
+
+    await this.updateSetting(READLOUD_SETTINGS.VOICE, choice.value);
+    vscode.window.showInformationMessage(`ReadLoud: Voice set to ${choice.label}.`);
+  }
+
+  public async clearVoice(): Promise<void> {
+    await this.updateSetting(READLOUD_SETTINGS.VOICE, READLOUD_DEFAULTS.VOICE);
+    vscode.window.showInformationMessage('ReadLoud: Voice reset to engine default.');
+  }
+
+  public async setVoiceLanguage(): Promise<void> {
+    const input = await vscode.window.showInputBox({
+      prompt: 'Set preferred voice language (ISO code), e.g. en, en-us, fr',
+      value: this.config.voiceLanguage,
+      ignoreFocusOut: true
+    });
+
+    if (input === undefined) {
+      return;
+    }
+
+    await this.updateSetting(READLOUD_SETTINGS.VOICE_LANGUAGE, input.trim());
+    if (input.trim().length === 0) {
+      vscode.window.showInformationMessage('ReadLoud: Voice language preference cleared.');
+    } else {
+      vscode.window.showInformationMessage(`ReadLoud: Voice language set to ${input.trim()}.`);
+    }
+  }
+
+  public async setSpeechDispatcherVoiceType(): Promise<void> {
+    const options: SpeechDispatcherVoiceType[] = [...SPEECH_DISPATCHER_VOICE_TYPES];
+
+    const items = options.map((value) => ({
+      label: value === '' ? 'Default' : value,
+      value
+    }));
+
+    const choice = await vscode.window.showQuickPick(items, {
+      placeHolder: `Current speech-dispatcher voice type: ${this.config.speechDispatcherVoiceType || 'default'}`
+    });
+
+    if (!choice) {
+      return;
+    }
+
+    await this.updateSetting(READLOUD_SETTINGS.SPEECH_DISPATCHER_VOICE_TYPE, choice.value);
+    vscode.window.showInformationMessage(`ReadLoud: speech-dispatcher voice type set to ${choice.label}.`);
   }
 
   public getState(): PlaybackState {
@@ -116,7 +262,7 @@ export class PlaybackController implements vscode.Disposable {
       return;
     }
 
-    if (!this.ensureUbuntu()) {
+    if (!this.ensureSupportedPlatform()) {
       return;
     }
 
@@ -196,6 +342,8 @@ export class PlaybackController implements vscode.Disposable {
   }
 
   public async stop(showNotification = false): Promise<void> {
+    this.clearLiveConfigRestart();
+
     if (this.state === 'idle') {
       return;
     }
@@ -256,6 +404,26 @@ export class PlaybackController implements vscode.Disposable {
         vscode.window.showInformationMessage('ReadLoud: Playback stopped because the document changed.');
       }
     }
+  }
+
+  public async onDidChangeConfiguration(event: vscode.ConfigurationChangeEvent): Promise<void> {
+    if (!event.affectsConfiguration(READLOUD_SECTION)) {
+      return;
+    }
+
+    const shouldRestartCurrentSentence =
+      this.state === 'playing' &&
+      (event.affectsConfiguration(`${READLOUD_SECTION}.${READLOUD_SETTINGS.SPEED_MULTIPLIER}`) ||
+        event.affectsConfiguration(`${READLOUD_SECTION}.${READLOUD_SETTINGS.RATE}`) ||
+        event.affectsConfiguration(`${READLOUD_SECTION}.${READLOUD_SETTINGS.SYNC_BASE_WPM}`));
+
+    this.reloadConfig();
+
+    if (!shouldRestartCurrentSentence) {
+      return;
+    }
+
+    this.scheduleLiveConfigRestart();
   }
 
   public reloadConfig(): void {
@@ -324,8 +492,11 @@ export class PlaybackController implements vscode.Disposable {
       const unit = this.sentenceUnits[this.currentIndex];
       this.highlighter.showSentenceAndLine(editor, unit.range, unit.lineRange, this.config.autoScroll);
 
-      const sentenceDurationMs = estimateSentenceDurationMs(unit.text, this.config.syncBaseWpm);
-      const wordDurations = estimateWordDurations(unit.words, sentenceDurationMs);
+      const baseSentenceDurationMs = estimateSentenceDurationMs(unit.text, this.config.syncBaseWpm);
+      const speedAdjustedDurationMs = Math.round(
+        baseSentenceDurationMs / Math.max(READLOUD_LIMITS.SPEED_MIN, this.config.speedMultiplier)
+      );
+      const wordDurations = estimateWordDurations(unit.words, speedAdjustedDurationMs);
 
       this.wordAbort?.abort();
       const sentenceWordAbort = new AbortController();
@@ -343,6 +514,8 @@ export class PlaybackController implements vscode.Disposable {
       try {
         await adapter.speakSentence(unit.text, {
           voice: this.config.voice,
+          voiceLanguage: this.config.voiceLanguage,
+          speechDispatcherVoiceType: this.config.speechDispatcherVoiceType,
           rate: this.config.rate,
           pitch: this.config.pitch,
           volume: this.config.volume,
@@ -392,9 +565,9 @@ export class PlaybackController implements vscode.Disposable {
     this.statusBar.update(next);
   }
 
-  private ensureUbuntu(): boolean {
-    if (process.platform !== 'linux') {
-      vscode.window.showErrorMessage('ReadLoud currently supports Ubuntu/Linux only.');
+  private ensureSupportedPlatform(): boolean {
+    if (process.platform !== SUPPORTED_PLATFORM) {
+      vscode.window.showErrorMessage(`ReadLoud currently supports ${SUPPORTED_PLATFORM_LABEL} only.`);
       return false;
     }
 
@@ -402,11 +575,80 @@ export class PlaybackController implements vscode.Disposable {
   }
 
   public dispose(): void {
+    this.clearLiveConfigRestart();
     void this.stop();
   }
 
   private createRangeToDocumentEnd(document: vscode.TextDocument, start: vscode.Position): vscode.Range {
     const lastLine = document.lineAt(document.lineCount - 1);
     return new vscode.Range(start, lastLine.range.end);
+  }
+
+  private async updateSetting(key: string, value: unknown): Promise<void> {
+    await vscode.workspace.getConfiguration(READLOUD_SECTION).update(key, value, vscode.ConfigurationTarget.Global);
+    this.reloadConfig();
+  }
+
+  private async setVoiceManually(engineDisplayName: string): Promise<void> {
+    const input = await vscode.window.showInputBox({
+      prompt: `Enter voice id for ${engineDisplayName} (leave empty for default)`,
+      value: this.config.voice,
+      ignoreFocusOut: true
+    });
+
+    if (input === undefined) {
+      return;
+    }
+
+    await this.updateSetting(READLOUD_SETTINGS.VOICE, input.trim());
+    if (input.trim().length === 0) {
+      vscode.window.showInformationMessage('ReadLoud: Voice reset to engine default.');
+    } else {
+      vscode.window.showInformationMessage(`ReadLoud: Voice set to ${input.trim()}.`);
+    }
+  }
+
+  private scheduleLiveConfigRestart(): void {
+    this.clearLiveConfigRestart();
+    this.liveConfigRestartTimer = setTimeout(() => {
+      void this.restartCurrentSentenceWithUpdatedConfig();
+    }, PLAYBACK_TIMINGS_MS.LIVE_CONFIG_RESTART_DEBOUNCE);
+  }
+
+  private clearLiveConfigRestart(): void {
+    if (!this.liveConfigRestartTimer) {
+      return;
+    }
+
+    clearTimeout(this.liveConfigRestartTimer);
+    this.liveConfigRestartTimer = undefined;
+  }
+
+  private async restartCurrentSentenceWithUpdatedConfig(): Promise<void> {
+    this.liveConfigRestartTimer = undefined;
+
+    if (this.state !== 'playing') {
+      return;
+    }
+
+    const editor = vscode.window.activeTextEditor;
+    if (!editor || !isSupportedLanguageId(editor.document.languageId)) {
+      return;
+    }
+
+    if (!this.sourceDocumentUri || editor.document.uri.toString() !== this.sourceDocumentUri) {
+      return;
+    }
+
+    if (this.sourceDocumentVersion !== editor.document.version) {
+      return;
+    }
+
+    await this.cancelRun();
+    if (this.state !== 'playing') {
+      return;
+    }
+
+    this.startRun(editor);
   }
 }

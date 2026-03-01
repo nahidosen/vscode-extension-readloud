@@ -20,6 +20,8 @@ suite('Engine adapters', () => {
     const adapter = new TestEspeakAdapter();
     const options: EngineSpeakOptions = {
       voice: 'en-us',
+      voiceLanguage: '',
+      speechDispatcherVoiceType: '',
       rate: 50,
       pitch: 50,
       volume: 100,
@@ -34,6 +36,8 @@ suite('Engine adapters', () => {
     const adapter = new TestSpdAdapter();
     const options: EngineSpeakOptions = {
       voice: 'en',
+      voiceLanguage: '',
+      speechDispatcherVoiceType: '',
       rate: 75,
       pitch: 50,
       volume: 100,
@@ -42,5 +46,21 @@ suite('Engine adapters', () => {
 
     const args = adapter.args('Hello world', options);
     assert.deepEqual(args, ['-w', '-r', '50', '-p', '0', '-i', '100', '-y', 'en', 'Hello world']);
+  });
+
+  test('adds speech-dispatcher language and voice type when configured', () => {
+    const adapter = new TestSpdAdapter();
+    const options: EngineSpeakOptions = {
+      voice: 'kal_diphone',
+      voiceLanguage: 'en',
+      speechDispatcherVoiceType: 'female1',
+      rate: 50,
+      pitch: 50,
+      volume: 50,
+      signal: new AbortController().signal
+    };
+
+    const args = adapter.args('Hello world', options);
+    assert.deepEqual(args, ['-w', '-r', '0', '-p', '0', '-i', '0', '-l', 'en', '-t', 'female1', '-y', 'kal_diphone', 'Hello world']);
   });
 });

@@ -1,3 +1,4 @@
+import { ENGINE_VALUES, SUPPORTED_PLATFORM_LABEL, TTS_BINARIES } from '../constants';
 import { EngineSetting, TtsEngineAdapter } from '../types';
 
 export interface EngineSelectionResult {
@@ -18,7 +19,7 @@ export async function selectEngine(
 
   const availableAdapters = availability.filter((entry) => entry.available).map((entry) => entry.adapter);
 
-  if (setting !== 'auto') {
+  if (setting !== ENGINE_VALUES.AUTO) {
     const exact = availableAdapters.find((adapter) => adapter.id === setting);
     if (exact) {
       return {
@@ -49,6 +50,6 @@ export async function selectEngine(
 
   return {
     adapter: undefined,
-    reason: 'No supported speech engine found. Install espeak-ng or speech-dispatcher on Ubuntu.'
+    reason: `No supported speech engine found. Install ${TTS_BINARIES.ESPEAK} or ${TTS_BINARIES.SPEECH_DISPATCHER} on ${SUPPORTED_PLATFORM_LABEL}.`
   };
 }

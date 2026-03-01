@@ -1,9 +1,9 @@
 import { ChildProcess } from 'child_process';
-import { EngineSpeakOptions, TtsEngineAdapter } from '../types';
+import { EngineSpeakOptions, ResolvedEngine, TtsEngineAdapter, VoiceOption } from '../types';
 import { killProcess, spawnSpeechProcess } from './processUtils';
 
 export abstract class BaseAdapter implements TtsEngineAdapter {
-  public abstract readonly id: 'espeak' | 'speechDispatcher';
+  public abstract readonly id: ResolvedEngine;
   public abstract readonly displayName: string;
   public readonly canPauseResume = false;
 
@@ -12,6 +12,9 @@ export abstract class BaseAdapter implements TtsEngineAdapter {
   protected abstract buildArgs(text: string, options: EngineSpeakOptions): string[];
   protected abstract commandName(): string;
   public abstract isAvailable(): Promise<boolean>;
+  public async listVoices(): Promise<VoiceOption[]> {
+    return [];
+  }
 
   public async speakSentence(text: string, options: EngineSpeakOptions): Promise<void> {
     await this.stop();

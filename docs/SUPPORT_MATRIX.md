@@ -35,6 +35,21 @@ If VS Code assigns a different language id, the extension will not start playbac
 - `speech-dispatcher` via `spd-say`: Supported
 - Engine mode `auto`: Supported (picks first available engine)
 
+## Voice Selection Support
+
+The extension supports multiple ways to control voice selection:
+
+- Direct engine switching:
+  - Auto
+  - eSpeak NG
+  - Speech Dispatcher
+- Quick-pick engine selection command (`ReadLoud: Pick Engine`)
+- Voice selection by engine voice list (when available)
+- Manual voice id entry fallback
+- Voice reset to engine default
+- Preferred voice language hint (`readLoud.voiceLanguage`)
+- Speech Dispatcher voice type (`readLoud.speechDispatcher.voiceType`)
+
 ## Language Support
 
 Language support depends on installed voices in your Linux environment.

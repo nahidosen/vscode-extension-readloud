@@ -1,3 +1,5 @@
+import { MARKDOWN_REGEX, TIMING_REGEX } from './constants';
+
 export interface ProseLine {
   line: number;
   startCol: number;
@@ -15,12 +17,6 @@ export interface WordSpan {
   end: number;
   text: string;
 }
-
-const WORD_REGEX = /[\p{L}\p{N}]+(?:['’-][\p{L}\p{N}]+)*/gu;
-const FENCE_REGEX = /^\s*(```|~~~)/;
-const TABLE_SEPARATOR_REGEX = /^\s*\|?\s*:?-+:?\s*(?:\|\s*:?-+:?\s*)+\|?\s*$/;
-const HTML_BLOCK_START_REGEX = /^\s*<(?!\/)([A-Za-z][A-Za-z0-9-]*)(\s+[^>]*)?>\s*$/;
-const HTML_BLOCK_END_REGEX = /^\s*<\/[A-Za-z][A-Za-z0-9-]*>\s*$/;
 
 export function extractVisibleProseLines(markdown: string): ProseLine[] {
   const lines = markdown.split(/\r?\n/);
@@ -49,7 +45,7 @@ export function extractVisibleProseLines(markdown: string): ProseLine[] {
       continue;
     }
 
-    if (FENCE_REGEX.test(trimmed)) {
+    if (MARKDOWN_REGEX.FENCE.test(trimmed)) {
       inFence = !inFence;
       continue;
     }
@@ -69,13 +65,13 @@ export function extractVisibleProseLines(markdown: string): ProseLine[] {
       continue;
     }
 
-    if (!inHtmlBlock && HTML_BLOCK_START_REGEX.test(trimmed) && !trimmed.endsWith('/>')) {
+    if (!inHtmlBlock && MARKDOWN_REGEX.HTML_BLOCK_START.test(trimmed) && !trimmed.endsWith('/>')) {
       inHtmlBlock = true;
       continue;
     }
 
     if (inHtmlBlock) {
-      if (HTML_BLOCK_END_REGEX.test(trimmed)) {
+      if (MARKDOWN_REGEX.HTML_BLOCK_END.test(trimmed)) {
         inHtmlBlock = false;
       }
       continue;
@@ -129,7 +125,7 @@ export function sentenceSpans(text: string): SentenceSpan[] {
   }
 
   const fallback: SentenceSpan[] = [];
-  const regex = /[^.!?]+[.!?]*/g;
+  const regex = new RegExp(MARKDOWN_REGEX.SENTENCE_FALLBACK.source, MARKDOWN_REGEX.SENTENCE_FALLBACK.flags);
   let match: RegExpExecArray | null;
   while ((match = regex.exec(text)) !== null) {
     const rawStart = match.index;
@@ -146,9 +142,9 @@ export function sentenceSpans(text: string): SentenceSpan[] {
 
 export function extractWordSpans(text: string): WordSpan[] {
   const spans: WordSpan[] = [];
-  WORD_REGEX.lastIndex = 0;
+  const regex = new RegExp(TIMING_REGEX.WORD.source, TIMING_REGEX.WORD.flags);
   let match: RegExpExecArray | null;
-  while ((match = WORD_REGEX.exec(text)) !== null) {
+  while ((match = regex.exec(text)) !== null) {
     spans.push({
       start: match.index,
       end: match.index + match[0].length,
@@ -204,7 +200,7 @@ function normalizeProseLine(raw: string): { startCol: number; text: string } | u
 }
 
 function isTableLine(trimmed: string): boolean {
-  if (TABLE_SEPARATOR_REGEX.test(trimmed)) {
+  if (MARKDOWN_REGEX.TABLE_SEPARATOR.test(trimmed)) {
     return true;
   }
 

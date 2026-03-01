@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { READLOUD_COMMANDS, STATUS_BAR } from './constants';
 import { PlaybackState } from './types';
 
 export class ReadLoudStatusBar implements vscode.Disposable {
@@ -7,11 +8,11 @@ export class ReadLoudStatusBar implements vscode.Disposable {
   private visible = false;
 
   constructor() {
-    this.primary = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-    this.stop = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 99);
+    this.primary = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, STATUS_BAR.PRIMARY_PRIORITY);
+    this.stop = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, STATUS_BAR.STOP_PRIORITY);
 
-    this.primary.name = 'ReadLoud';
-    this.stop.name = 'ReadLoud Stop';
+    this.primary.name = STATUS_BAR.PRIMARY_NAME;
+    this.stop.name = STATUS_BAR.STOP_NAME;
 
     this.update('idle');
   }
@@ -27,21 +28,21 @@ export class ReadLoudStatusBar implements vscode.Disposable {
       case 'playing':
         this.primary.text = '$(debug-pause) ReadLoud';
         this.primary.tooltip = 'ReadLoud: Pause';
-        this.primary.command = 'readLoud.pause';
+        this.primary.command = READLOUD_COMMANDS.PAUSE;
 
         this.stop.text = '$(primitive-square) Stop';
         this.stop.tooltip = 'ReadLoud: Stop';
-        this.stop.command = 'readLoud.stop';
+        this.stop.command = READLOUD_COMMANDS.STOP;
         this.stop.show();
         break;
       case 'paused':
         this.primary.text = '$(play) ReadLoud';
         this.primary.tooltip = 'ReadLoud: Resume';
-        this.primary.command = 'readLoud.resume';
+        this.primary.command = READLOUD_COMMANDS.RESUME;
 
         this.stop.text = '$(primitive-square) Stop';
         this.stop.tooltip = 'ReadLoud: Stop';
-        this.stop.command = 'readLoud.stop';
+        this.stop.command = READLOUD_COMMANDS.STOP;
         this.stop.show();
         break;
       case 'stopping':
@@ -54,7 +55,7 @@ export class ReadLoudStatusBar implements vscode.Disposable {
       default:
         this.primary.text = '$(unmute) ReadLoud';
         this.primary.tooltip = 'ReadLoud: Start';
-        this.primary.command = 'readLoud.start';
+        this.primary.command = READLOUD_COMMANDS.START;
         this.stop.hide();
         break;
     }

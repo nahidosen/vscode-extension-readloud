@@ -1,11 +1,5 @@
-export const SUPPORTED_LANGUAGE_IDS = [
-  'markdown',
-  'plaintext',
-  'restructuredtext',
-  'asciidoc',
-  'latex',
-  'org'
-] as const;
+import { SUPPORTED_LANGUAGE_IDS } from './constants';
+export { SUPPORTED_LANGUAGE_IDS };
 
 export type SupportedLanguageId = (typeof SUPPORTED_LANGUAGE_IDS)[number];
 

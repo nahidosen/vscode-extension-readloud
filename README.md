@@ -18,6 +18,21 @@ Support matrix (OS, languages, requirements):
 
 ## What's new in this version
 
+- Added voice engine control commands and controls view buttons:
+  - switch engine directly (`Auto`, `eSpeak`, `Speech Dispatcher`)
+  - quick-pick engine selection
+- Added richer voice controls:
+  - pick available voices from engine list (when available)
+  - manual voice id entry fallback
+  - reset to default voice
+  - preferred voice language (`readLoud.voiceLanguage`)
+  - speech-dispatcher voice type (`readLoud.speechDispatcher.voiceType`)
+- Reordered controls groups to: Start Modes -> Playback -> Speed/Volume -> Engine -> Voice.
+- Added per-group selected button state (last clicked button in each group stays highlighted).
+- Added Speed Level and Volume Level slider lines in controls view.
+- Speed slider now steps by `0.10x`.
+- Volume slider now steps by `10`.
+- Improved speech-dispatcher stop behavior with explicit stop/cancel commands.
 - Added support for additional easy text file types:
   - Plain Text (`plaintext`)
   - reStructuredText (`restructuredtext`)
@@ -56,10 +71,21 @@ Note: VS Code does not allow arbitrary floating windows for extension controls. 
   - start from cursor to end
   - read selection only
   - start from selection to end
+  - pick engine / set engine directly
+  - pick voice / clear voice
+  - set voice language / set speech-dispatcher voice type
   - pause / resume / stop
   - next sentence / previous sentence
 - Compact controls view buttons:
-  - From Beginning, Cursor to End, Selection Only, Selection to End, Back, Forward, Pause, Resume, Stop
+  - Start modes: From Beginning, Cursor to End, Selection Only, Selection to End
+  - Playback: Back, Forward, Pause, Resume, Stop
+  - Engine: Auto, eSpeak, Speech Dispatcher, Pick Engine
+  - Voice: Pick Voice, Default Voice, Lang, Type
+- One button per group stays selected (the last clicked in that group).
+- Speed and volume can be adjusted from slider lines in the controls view.
+- Speed slider range is `0.10x..2.00x` in `0.10x` steps.
+- Volume slider range is `0..100` in `10` steps.
+- While playback is running, speed changes apply immediately by restarting the current sentence with the new speed.
 - Selectable Ubuntu speech backend:
   - `espeak-ng`
   - `speech-dispatcher` (`spd-say`)
@@ -124,6 +150,14 @@ npm run compile
 - `ReadLoud: Start From Cursor To End` (`readLoud.startFromCursor`)
 - `ReadLoud: Read Selection Only` (`readLoud.startSelection`)
 - `ReadLoud: Start From Selection To End` (`readLoud.startSelectionToEnd`)
+- `ReadLoud: Pick Engine` (`readLoud.pickEngine`)
+- `ReadLoud: Use Auto Engine` (`readLoud.engineAuto`)
+- `ReadLoud: Use eSpeak NG Engine` (`readLoud.engineEspeak`)
+- `ReadLoud: Use Speech Dispatcher Engine` (`readLoud.engineSpeechDispatcher`)
+- `ReadLoud: Pick Voice` (`readLoud.pickVoice`)
+- `ReadLoud: Reset To Default Voice` (`readLoud.clearVoice`)
+- `ReadLoud: Set Preferred Voice Language` (`readLoud.setVoiceLanguage`)
+- `ReadLoud: Set Speech Dispatcher Voice Type` (`readLoud.setSpeechDispatcherVoiceType`)
 - `ReadLoud: Pause` (`readLoud.pause`)
 - `ReadLoud: Resume` (`readLoud.resume`)
 - `ReadLoud: Stop` (`readLoud.stop`)
@@ -136,9 +170,12 @@ All settings are under `readLoud.*`.
 
 - `readLoud.engine`: `auto | espeak | speechDispatcher` (default `auto`)
 - `readLoud.voice`: string voice id (default empty)
-- `readLoud.rate`: `0..100` (default `50`)
+- `readLoud.voiceLanguage`: preferred language hint (e.g. `en`, `en-us`, `fr`)
+- `readLoud.speechDispatcher.voiceType`: `male1|male2|male3|female1|female2|female3|child_male|child_female|''`
+- `readLoud.speedMultiplier`: `0.10..2.00` (default `1.00`, step `0.10`)
+- `readLoud.rate`: `0..100` (legacy setting, prefer `readLoud.speedMultiplier`)
 - `readLoud.pitch`: `0..100` (default `50`)
-- `readLoud.volume`: `0..100` (default `100`)
+- `readLoud.volume`: `0..100` (default `100`, step `10`)
 - `readLoud.showStatusBar`: boolean (default `false`)
 - `readLoud.highlight.wordColor`: CSS color string
 - `readLoud.highlight.sentenceColor`: CSS color string
@@ -152,7 +189,9 @@ Example `settings.json`:
 {
   "readLoud.engine": "auto",
   "readLoud.voice": "en-us",
-  "readLoud.rate": 55,
+  "readLoud.voiceLanguage": "en-us",
+  "readLoud.speechDispatcher.voiceType": "female1",
+  "readLoud.speedMultiplier": 1.0,
   "readLoud.pitch": 52,
   "readLoud.volume": 100,
   "readLoud.showStatusBar": false,
