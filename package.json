@@ -1,0 +1,247 @@
+{
+  "name": "readloud-markdown",
+  "displayName": "ReadLoud Text",
+  "description": "Read aloud supported text files on Ubuntu with word, sentence, and line highlighting.",
+  "version": "0.0.4",
+  "publisher": "local-dev",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.109.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:readLoud.start",
+    "onCommand:readLoud.startFromCursor",
+    "onCommand:readLoud.startSelection",
+    "onCommand:readLoud.startSelectionToEnd",
+    "onCommand:readLoud.pickEngine",
+    "onCommand:readLoud.engineAuto",
+    "onCommand:readLoud.engineEspeak",
+    "onCommand:readLoud.engineSpeechDispatcher",
+    "onCommand:readLoud.pickVoice",
+    "onCommand:readLoud.clearVoice",
+    "onCommand:readLoud.setVoiceLanguage",
+    "onCommand:readLoud.setSpeechDispatcherVoiceType",
+    "onCommand:readLoud.pause",
+    "onCommand:readLoud.resume",
+    "onCommand:readLoud.stop",
+    "onCommand:readLoud.nextSentence",
+    "onCommand:readLoud.previousSentence",
+    "onView:readLoud.controls",
+    "onLanguage:markdown",
+    "onLanguage:plaintext",
+    "onLanguage:restructuredtext",
+    "onLanguage:asciidoc",
+    "onLanguage:latex",
+    "onLanguage:org"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "readLoud.start",
+        "title": "ReadLoud: Start From Beginning"
+      },
+      {
+        "command": "readLoud.startFromCursor",
+        "title": "ReadLoud: Start From Cursor To End"
+      },
+      {
+        "command": "readLoud.startSelection",
+        "title": "ReadLoud: Read Selection Only"
+      },
+      {
+        "command": "readLoud.startSelectionToEnd",
+        "title": "ReadLoud: Start From Selection To End"
+      },
+      {
+        "command": "readLoud.pickEngine",
+        "title": "ReadLoud: Pick Engine"
+      },
+      {
+        "command": "readLoud.engineAuto",
+        "title": "ReadLoud: Use Auto Engine"
+      },
+      {
+        "command": "readLoud.engineEspeak",
+        "title": "ReadLoud: Use eSpeak NG Engine"
+      },
+      {
+        "command": "readLoud.engineSpeechDispatcher",
+        "title": "ReadLoud: Use Speech Dispatcher Engine"
+      },
+      {
+        "command": "readLoud.pickVoice",
+        "title": "ReadLoud: Pick Voice"
+      },
+      {
+        "command": "readLoud.clearVoice",
+        "title": "ReadLoud: Reset To Default Voice"
+      },
+      {
+        "command": "readLoud.setVoiceLanguage",
+        "title": "ReadLoud: Set Preferred Voice Language"
+      },
+      {
+        "command": "readLoud.setSpeechDispatcherVoiceType",
+        "title": "ReadLoud: Set Speech Dispatcher Voice Type"
+      },
+      {
+        "command": "readLoud.pause",
+        "title": "ReadLoud: Pause"
+      },
+      {
+        "command": "readLoud.resume",
+        "title": "ReadLoud: Resume"
+      },
+      {
+        "command": "readLoud.stop",
+        "title": "ReadLoud: Stop"
+      },
+      {
+        "command": "readLoud.nextSentence",
+        "title": "ReadLoud: Next Sentence"
+      },
+      {
+        "command": "readLoud.previousSentence",
+        "title": "ReadLoud: Previous Sentence"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "readLoud.controls",
+          "name": "ReadLoud Controls",
+          "type": "webview"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "ReadLoud",
+      "properties": {
+        "readLoud.engine": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "espeak",
+            "speechDispatcher"
+          ],
+          "default": "auto",
+          "description": "Speech backend to use on Ubuntu. auto chooses the first available backend."
+        },
+        "readLoud.voice": {
+          "type": "string",
+          "default": "",
+          "description": "Voice identifier for the active backend. Empty means backend default voice."
+        },
+        "readLoud.voiceLanguage": {
+          "type": "string",
+          "default": "",
+          "description": "Preferred voice language hint (e.g. en, en-us, fr). Used by compatible engines."
+        },
+        "readLoud.speechDispatcher.voiceType": {
+          "type": "string",
+          "enum": [
+            "",
+            "male1",
+            "male2",
+            "male3",
+            "female1",
+            "female2",
+            "female3",
+            "child_male",
+            "child_female"
+          ],
+          "default": "",
+          "description": "Preferred speech-dispatcher voice type. Empty means backend default."
+        },
+        "readLoud.speedMultiplier": {
+          "type": "number",
+          "default": 1.0,
+          "multipleOf": 0.1,
+          "minimum": 0.1,
+          "maximum": 2.0,
+          "description": "Speech speed multiplier from 0.10x to 2.00x in 0.10 steps. 1.00x is normal speed."
+        },
+        "readLoud.rate": {
+          "type": "number",
+          "default": 50,
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Legacy normalized speech rate (0..100). Prefer readLoud.speedMultiplier."
+        },
+        "readLoud.pitch": {
+          "type": "number",
+          "default": 50,
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Speech pitch, normalized from 0 to 100."
+        },
+        "readLoud.volume": {
+          "type": "number",
+          "default": 100,
+          "multipleOf": 10,
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Speech volume, normalized from 0 to 100 in 10-step increments."
+        },
+        "readLoud.showStatusBar": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show classic status bar controls at the bottom bar. Off by default because the movable controls view is preferred."
+        },
+        "readLoud.highlight.wordColor": {
+          "type": "string",
+          "default": "rgba(255, 170, 0, 0.45)",
+          "description": "Decoration background color for the current spoken word."
+        },
+        "readLoud.highlight.sentenceColor": {
+          "type": "string",
+          "default": "rgba(0, 170, 255, 0.20)",
+          "description": "Decoration background color for the current sentence."
+        },
+        "readLoud.highlight.lineColor": {
+          "type": "string",
+          "default": "rgba(0, 255, 140, 0.12)",
+          "description": "Decoration background color for the current line."
+        },
+        "readLoud.autoScroll": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically reveal the current spoken word/sentence in the active editor."
+        },
+        "readLoud.sync.baseWPM": {
+          "type": "number",
+          "default": 180,
+          "minimum": 80,
+          "maximum": 320,
+          "description": "Base words-per-minute used for estimated word highlight timing."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "pretest": "npm run compile && npm run lint",
+    "test": "npm run test:unit",
+    "test:unit": "mocha \"out/test/suite/{markdown,timing,engine,languageSupport}.test.js\" --ui tdd",
+    "test:integration": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "20.x",
+    "@types/vscode": "^1.109.0",
+    "@typescript-eslint/eslint-plugin": "^8.29.0",
+    "@typescript-eslint/parser": "^8.29.0",
+    "@vscode/test-electron": "^2.4.1",
+    "eslint": "^8.57.0",
+    "glob": "^10.4.5",
+    "mocha": "^10.8.2",
+    "typescript": "^5.8.2"
+  }
+}
